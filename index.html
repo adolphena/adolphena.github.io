@@ -457,8 +457,6 @@
       <picture>
         <source media="(max-width: 768px)" srcset="photo-1-mobile.jpg">
         <img src="photo-1.jpg" alt="婚纱照封面"
-             data-mobile="photo-1-mobile.jpg"
-             data-desktop="photo-1.jpg"
              fetchpriority="high" decoding="async">
       </picture>
 
@@ -490,9 +488,7 @@
     <section class="page photo-page" data-page="1">
       <picture>
         <source media="(max-width: 768px)" srcset="photo-2-mobile.jpg">
-        <img src="photo-2.jpg" alt="婚纱照 2"
-             data-mobile="photo-2-mobile.jpg"
-             data-desktop="photo-2.jpg" decoding="async">
+        <img src="photo-2.jpg" alt="婚纱照 2" decoding="async">
       </picture>
       <div class="photo-overlay">
         <div class="overlay-verse">朝暮与年岁并往，与你行至天光</div>
@@ -502,9 +498,7 @@
     <section class="page photo-page" data-page="2">
       <picture>
         <source media="(max-width: 768px)" srcset="photo-3-mobile.jpg">
-        <img src="photo-3.jpg" alt="婚纱照 3"
-             data-mobile="photo-3-mobile.jpg"
-             data-desktop="photo-3.jpg" decoding="async">
+        <img src="photo-3.jpg" alt="婚纱照 3" decoding="async">
       </picture>
       <div class="photo-overlay">
         <div class="overlay-verse">山水一程，三生有幸</div>
@@ -514,9 +508,7 @@
     <section class="page photo-page" data-page="3">
       <picture>
         <source media="(max-width: 768px)" srcset="photo-4-mobile.jpg">
-        <img src="photo-4.jpg" alt="婚纱照 4"
-             data-mobile="photo-4-mobile.jpg"
-             data-desktop="photo-4.jpg" decoding="async">
+        <img src="photo-4.jpg" alt="婚纱照 4" decoding="async">
       </picture>
       <div class="photo-overlay">
         <div class="overlay-verse">既见君子，云胡不喜</div>
@@ -526,9 +518,7 @@
     <section class="page photo-page" data-page="4">
       <picture>
         <source media="(max-width: 768px)" srcset="photo-5-mobile.jpg">
-        <img src="photo-5.jpg" alt="婚纱照 5"
-             data-mobile="photo-5-mobile.jpg"
-             data-desktop="photo-5.jpg" decoding="async">
+        <img src="photo-5.jpg" alt="婚纱照 5" decoding="async">
       </picture>
       <div class="photo-overlay">
         <div class="overlay-verse">愿有岁月可回首，且以深情共白头</div>
@@ -569,19 +559,6 @@
   <script>
     (function() {
       // ========================================================
-      //  屏幕类型判断（与 <source media> 保持一致）
-      // ========================================================
-      const MOBILE_MQ = '(max-width: 768px)';
-      const isMobile = window.matchMedia(MOBILE_MQ).matches;
-
-      // 取图片在当前设备下应加载的真实地址
-      function realSrcOf(img) {
-        return isMobile
-          ? (img.dataset.mobile || img.currentSrc || img.src)
-          : (img.dataset.desktop || img.src);
-      }
-
-      // ========================================================
       //  一、整页滑动控制
       // ========================================================
       const pagesEl = document.getElementById('pages');
@@ -616,7 +593,6 @@
         pagesEl.style.transform = 'translateY(-' + (current * 100) + '%)';
         dotEls.forEach((d, i) => d.classList.toggle('active', i === current));
         updateHint();
-        ensurePageImage(current);
         if (current === total - 1) clearAuto();
         else resetAuto();
         setTimeout(() => { animating = false; }, ANIM_DURATION);
@@ -679,7 +655,7 @@
       pageEls.forEach((p, i) => p.classList.toggle('active', i === 0));
 
       // ========================================================
-      //  二、预加载：封面优先，其余延后；音频不卡进度
+      //  二、预加载所有媒体，显示进度（音频优化版）
       // ========================================================
       const bgMusic = document.getElementById('bgMusic');
       const musicToggle = document.getElementById('musicToggle');
@@ -690,81 +666,319 @@
 
       let musicPlaying = false;
 
-      // 所有页图片元素
-      const allImgs = Array.from(document.querySelectorAll('.page img'));
-      const coverImg = allImgs[0];
-      const innerImgs = allImgs.slice(1);
+      const imageSrcs = [];
+      document.querySelectorAll('.page img').forEach(img => {
+        if (img.src) imageSrcs.push(img.src);
+      });
 
-      // 关键资源：只等封面图 + 音频，进度条才算完
-      let keyTotal = 1 + (bgMusic ? 1 : 0); // 封面 + 音频
-      let keyDone = 0;
+      const musicSrc = bgMusic.getAttribute('src');
+
+      const resources = [
+        ...imageSrcs.map(src => ({ type: 'image', src })),
+        { type: 'audio', src: musicSrc }
+      ];
+
+      const totalCount = resources.length;
+      let loadedCount = 0;
+      let failedCount = 0;
 
       function updateProgress() {
-        const percent = keyTotal === 0 ? 100 : Math.round((keyDone / keyTotal) * 100);
+        const done = loadedCount + failedCount;
+        const percent = totalCount === 0 ? 100 : Math.round((done / totalCount) * 100);
         progressFill.style.width = percent + '%';
-        progressText.textContent = '正在加载 ' + Math.min(percent, 100) + '%';
-        if (keyDone >= keyTotal) {
+        progressText.textContent = '正在加载 ' + percent + '%';
+
+        if (done >= totalCount) {
           progressBar.style.display = 'none';
           progressText.style.display = 'none';
           openBtn.classList.add('show');
         }
       }
-      updateProgress();
 
-      // 预加载单张图
-      function preloadImage(src) {
+      function preloadOne(item) {
         return new Promise((resolve) => {
-          if (!src) return resolve();
-          const img = new Image();
-          img.onload = img.onerror = () => resolve();
-          img.src = src;
-        });
-      }
-
-      // 预加载音频（不阻塞：loadeddata 或 3.5s 超时都算完成）
-      function preloadAudio(src) {
-        return new Promise((resolve) => {
-          if (!src) return resolve();
           let settled = false;
-          const done = () => { if (!settled) { settled = true; resolve(); } };
-          const audio = new Audio();
-          audio.preload = 'auto';
-          audio.addEventListener('loadeddata', done, { once: true });
-          audio.addEventListener('error', done, { once: true });
-          audio.src = src;
-          audio.load();
-          setTimeout(done, 3500);
+          const done = () => {
+            if (settled) return;
+            settled = true;
+            loadedCount++;
+            updateProgress();
+            resolve();
+          };
+          const fail = () => {
+            if (settled) return;
+            settled = true;
+            failedCount++;
+            updateProgress();
+            resolve();
+          };
+
+          if (item.type === 'image') {
+            const img = new Image();
+            img.onload = done;
+            img.onerror = fail;
+            img.src = item.src;
+          } else {
+            // 音频：用 loadeddata 代替 canplaythrough，快很多
+            const audio = new Audio();
+            audio.preload = 'auto';
+            audio.addEventListener('loadeddata', done, { once: true });
+            audio.addEventListener('error', fail, { once: true });
+            audio.src = item.src;
+            audio.load();
+
+            // 兜底：3 秒还没 loadeddata 也算完成，避免进度条卡死
+            setTimeout(() => {
+              if (!settled) done();
+            }, 3000);
+          }
         });
       }
 
-      // 1) 封面图：最关键，先加载
-      const coverSrc = realSrcOf(coverImg);
-      preloadImage(coverSrc).then(() => {
-        keyDone++;
+      Promise.all(resources.map(preloadOne)).then(() => {
+        loadedCount = totalCount;
+        failedCount = 0;
         updateProgress();
       });
 
-      // 2) 音频：并行加载，超时也不影响
-      const musicSrc = bgMusic ? bgMusic.getAttribute('src') : null;
-      preloadAudio(musicSrc).then(() => {
-        keyDone++;
-        updateProgress();
-      });
-
-      // 3) 内页图：等封面加载完，再在后台慢慢预热（不显示进度）
-      function warmupInnerImages() {
-        const srcs = innerImgs.map(realSrcOf).filter(Boolean);
-        // 串行预热，避免和封面/音频抢带宽
-        let i = 0;
-        (function step() {
-          if (i >= srcs.length) return;
-          preloadImage(srcs[i++]).then(() => {
-            setTimeout(step, 60);
-          });
-        })();
+      // ========================================================
+      //  三、开启邀请函
+      // ========================================================
+      function playMusic() {
+        if (!bgMusic) return;
+        bgMusic.volume = 0.6;
+        bgMusic.play().then(() => {
+          musicPlaying = true;
+          musicToggle.classList.add('playing');
+        }).catch(() => {});
       }
 
-      // 页图按需兜底：切到某页时若还没加载，立刻补上
-      const pageImageLoaded = new WeakSet();
-      function ensurePageImage(index) {
-        const page = pageEls
+      function doOpen() {
+        if (started) return;
+        started = true;
+        playMusic();
+        openBtn.classList.add('hide');
+        dotsEl.classList.add('show');
+        musicToggle.classList.add('show');
+        setTimeout(() => {
+          goTo(1);
+          resetAuto();
+        }, 380);
+      }
+
+      openBtn.addEventListener('click', doOpen);
+
+      musicToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!bgMusic) return;
+        if (musicPlaying) {
+          bgMusic.pause();
+          musicPlaying = false;
+          musicToggle.classList.remove('playing');
+        } else {
+          bgMusic.volume = 0.6;
+          bgMusic.play().then(() => {
+            musicPlaying = true;
+            musicToggle.classList.add('playing');
+          }).catch(() => {});
+        }
+      });
+
+      // ========================================================
+      //  四、图片渐显
+      // ========================================================
+      function bindImageFade(img) {
+        const page = img.closest('.page');
+        if (!page) return;
+        const markLoaded = () => {
+          img.classList.add('loaded');
+          page.classList.remove('loading');
+        };
+        if (img.complete && img.naturalWidth > 0) {
+          markLoaded();
+        } else {
+          img.addEventListener('load', markLoaded);
+          img.addEventListener('error', markLoaded);
+        }
+      }
+      document.querySelectorAll('.page img').forEach(bindImageFade);
+
+      // ========================================================
+      //  五、爱心粒子（最后一页）
+      // ========================================================
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      const titleEl = document.getElementById('titleText');
+      let particles = [];
+      let mouse = { x: -9999, y: -9999 };
+      let mouseActive = false;
+      let particleStarted = false;
+
+      function resizeCanvas() {
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+        initParticles();
+        adjustTitleFontSize();
+      }
+
+      function adjustTitleFontSize() {
+        if (!titleEl) return;
+        const containerWidth = window.innerWidth;
+        const maxWidth = containerWidth * 0.9;
+        const baseFontSize = 16;
+        titleEl.style.fontSize = baseFontSize + 'px';
+        const textWidth = titleEl.scrollWidth;
+        if (textWidth === 0) return;
+        let newFontSize = baseFontSize * (maxWidth / textWidth);
+        const minFontSize = 32, maxFontSize = 160;
+        newFontSize = Math.min(maxFontSize, Math.max(minFontSize, newFontSize));
+        const maxHeight = window.innerHeight * 0.25;
+        if (newFontSize > maxHeight) newFontSize = Math.min(newFontSize, maxHeight);
+        titleEl.style.fontSize = newFontSize + 'px';
+        titleEl.style.lineHeight = '1.2';
+      }
+
+      function initParticles() {
+        particles = [];
+        const count = Math.floor((canvas.width * canvas.height) / 3500);
+        const finalCount = Math.max(80, Math.min(count, 400));
+        for (let i = 0; i < finalCount; i++) {
+          particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            vx: (Math.random() - 0.5) * 0.4,
+            vy: (Math.random() - 0.5) * 0.4,
+            baseVx: 0, baseVy: 0,
+            size: Math.random() * 6 + 4,
+            alpha: Math.random() * 0.3 + 0.12,
+            rotation: Math.random() * Math.PI * 2
+          });
+          const p = particles[particles.length - 1];
+          p.baseVx = p.vx;
+          p.baseVy = p.vy;
+        }
+      }
+
+      window.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX; mouse.y = e.clientY; mouseActive = true;
+      });
+      window.addEventListener('mouseleave', () => {
+        mouseActive = false; mouse.x = -9999; mouse.y = -9999;
+      });
+      window.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 0) {
+          const t = e.touches[0];
+          mouse.x = t.clientX; mouse.y = t.clientY; mouseActive = true;
+        }
+      }, { passive: true });
+      window.addEventListener('touchend', () => {
+        mouseActive = false; mouse.x = -9999; mouse.y = -9999;
+      });
+
+      function drawHeart(c, x, y, size, rotation, color) {
+        c.save();
+        c.translate(x, y);
+        c.rotate(rotation);
+        const s = size / 16;
+        c.scale(s, s);
+        c.beginPath();
+        c.moveTo(0, 4);
+        c.bezierCurveTo(0, 0, -8, 0, -8, 6);
+        c.bezierCurveTo(-8, 11, -4, 14, 0, 18);
+        c.bezierCurveTo(4, 14, 8, 11, 8, 6);
+        c.bezierCurveTo(8, 0, 0, 0, 0, 4);
+        c.closePath();
+        c.fillStyle = color;
+        c.fill();
+        c.restore();
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const hasMouse = mouseActive && mouse.x > -1000 && mouse.y > -1000;
+
+        particles.forEach(p => {
+          if (hasMouse) {
+            const dx = mouse.x - p.x, dy = mouse.y - p.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const maxDist = 180;
+            if (dist < maxDist && dist > 0) {
+              const force = (1 - dist / maxDist) * 0.12;
+              p.vx += (dx / dist) * force;
+              p.vy += (dy / dist) * force;
+              p.rotation += 0.05;
+            }
+          }
+          p.vx += (p.baseVx - p.vx) * 0.02;
+          p.vy += (p.baseVy - p.vy) * 0.02;
+          p.rotation += 0.005;
+          p.x += p.vx; p.y += p.vy;
+          if (p.x < -20) p.x = canvas.width + 20;
+          if (p.x > canvas.width + 20) p.x = -20;
+          if (p.y < -20) p.y = canvas.height + 20;
+          if (p.y > canvas.height + 20) p.y = -20;
+
+          let color;
+          if (hasMouse) {
+            const dx = mouse.x - p.x, dy = mouse.y - p.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 180) {
+              const t = 1 - dist / 180;
+              const r = Math.round(212 + (255 - 212) * t);
+              const g = Math.round(106 + (143 - 106) * t);
+              const b = Math.round(146 + (176 - 146) * t);
+              color = `rgba(${r}, ${g}, ${b}, ${p.alpha + t * 0.35})`;
+            } else {
+              color = `rgba(224, 130, 170, ${p.alpha * 0.95})`;
+            }
+          } else {
+            color = `rgba(230, 140, 175, ${p.alpha * 0.9})`;
+          }
+          drawHeart(ctx, p.x, p.y, p.size, p.rotation, color);
+        });
+
+        if (hasMouse) {
+          particles.forEach(p => {
+            const dx = mouse.x - p.x, dy = mouse.y - p.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 140) {
+              ctx.beginPath();
+              ctx.moveTo(mouse.x, mouse.y);
+              ctx.lineTo(p.x, p.y);
+              const t = 1 - dist / 140;
+              ctx.strokeStyle = `rgba(235, 130, 175, ${t * 0.28})`;
+              ctx.lineWidth = 0.6;
+              ctx.stroke();
+            }
+          });
+        }
+        requestAnimationFrame(animate);
+      }
+
+      function startParticlesOnce() {
+        if (particleStarted) return;
+        particleStarted = true;
+        resizeCanvas();
+        animate();
+      }
+
+      window.addEventListener('resize', () => {
+        resizeCanvas();
+        pagesEl.style.transform = 'translateY(-' + (current * 100) + '%)';
+      });
+
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => adjustTitleFontSize());
+      }
+      window.addEventListener('load', () => {
+        adjustTitleFontSize();
+        if (current === total - 1) startParticlesOnce();
+      });
+
+      setInterval(() => {
+        if (current === total - 1) startParticlesOnce();
+      }, 300);
+    })();
+  </script>
+</body>
+</html>
