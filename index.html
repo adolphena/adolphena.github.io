@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>你好</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+    /* 这里恢复正常鼠标图标 */
+    cursor: default;
+  }
+
+  #canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: block;
+    z-index: 1;
+  }
+
+  .title {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: clamp(3.5em, 12vw, 10em);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    color: #1d1d1f;
+    z-index: 2;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* 移动端适配 */
+  @media (max-width: 600px) {
+    body { cursor: auto; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+<div class="title">你好</div>
+
+<script>
+/* ========== 自由漫游 + 鼠标吸引的粒子系统 ========== */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+let mouse = { x: -9999, y: -9999 };
+let mouseActive = false;
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  initParticles();
+}
+window.addEventListener('resize', resize);
+
+function initParticles() {
+  particles = [];
+  // 【关键修改】把除数从 15000 改成 3000，粒子数量翻了 5 倍
+  const count = Math.floor((canvas.width * canvas.height) / 3000);
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: (Math.random() - 0.5) * 0.4,
+      baseVx: 0,
+      baseVy: 0,
+      size: Math.random() * 1.8 + 0.6,
+      alpha: Math.random() * 0.4 + 0.1
+    });
+    const p = particles[particles.length - 1];
+    p.baseVx = p.vx;
+    p.baseVy = p.vy;
+  }
+}
+
+window.addEventListener('mousemove', e => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+  mouseActive = true;
+});
+window.addEventListener('mouseleave', () => {
+  mouseActive = false;
+});
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  particles.forEach(p => {
+    /* ---- 鼠标吸引力 ---- */
+    if (mouseActive) {
+      const dx = mouse.x - p.x;
+      const dy = mouse.y - p.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const maxDist = 160; // 影响范围稍微放大一点
+
+      if (dist < maxDist && dist > 0) {
+        const force = (1 - dist / maxDist) * 0.08;
+        p.vx += (dx / dist) * force;
+        p.vy += (dy / dist) * force;
+      }
+    }
+
+    /* ---- 恢复自由速度 ---- */
+    p.vx += (p.baseVx - p.vx) * 0.02;
+    p.vy += (p.baseVy - p.vy) * 0.02;
+
+    /* ---- 更新位置 ---- */
+    p.x += p.vx;
+    p.y += p.vy;
+
+    /* ---- 边界穿越 ---- */
+    if (p.x < 0) p.x = canvas.width;
+    if (p.x > canvas.width) p.x = 0;
+    if (p.y < 0) p.y = canvas.height;
+    if (p.y > canvas.height) p.y = 0;
+
+    /* ---- 绘制 ---- */
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(29, 29, 31, ${p.alpha})`;
+    ctx.fill();
+  });
+
+  /* ---- 鼠标和附近粒子的连线 ---- */
+  if (mouseActive) {
+    particles.forEach(p => {
+      const dx = mouse.x - p.x;
+      const dy = mouse.y - p.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 130) {
+        ctx.beginPath();
+        ctx.moveTo(mouse.x, mouse.y);
+        ctx.lineTo(p.x, p.y);
+        ctx.strokeStyle = `rgba(0, 0, 0, ${(1 - dist / 130) * 0.08})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    });
+  }
+
+  requestAnimationFrame(animate);
+}
+
+resize();
+animate();
+</script>
+</body>
+</html>
