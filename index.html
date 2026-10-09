@@ -11,78 +11,59 @@
 html, body {
   width: 100%; height: 100%; overflow: hidden;
   background: radial-gradient(circle at 50% 45%, #fff8fb 0%, #ffe4ee 55%, #ffd0e0 100%);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
-#pages {
-  position: fixed; inset: 0; z-index: 2;
-  transition: transform .75s cubic-bezier(.65,0,.35,1);
-  will-change: transform;
-}
-
+/* ---------- 页面切换 ---------- */
 .page {
-  position: relative;
-  width: 100%; height: 100vh; height: 100dvh;
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity .6s ease;
   overflow: hidden;
 }
+.page.active { opacity: 1; pointer-events: auto; }
 
-/* ---------- 通用图片页 ---------- */
-.page img {
+/* =====================================================
+   封面页
+   ===================================================== */
+#coverPage { justify-content: flex-end; }
+#coverPage img {
+  position: absolute; inset: 0;
   width: 100%; height: 100%;
-  object-fit: cover; object-position: center;
-  display: block;
+  object-fit: cover; object-position: center 40%;
   user-select: none; -webkit-user-drag: none;
-  opacity: 0; transition: opacity .7s ease;
+  opacity: 0; transition: opacity .9s ease;
 }
-.page img.loaded { opacity: 1; }
-.cover-page img { object-position: center 40%; transition-duration: .9s; }
-
-/* ---------- 封面文案 ---------- */
-.cover-mask {
+#coverPage img.loaded { opacity: 1; }
+#coverPage::before {
+  content: "";
   position: absolute; left: 0; right: 0; bottom: 0; height: 58%;
   background: linear-gradient(to bottom,
     rgba(255,248,251,0) 0%, rgba(255,235,244,.55) 45%,
     rgba(255,224,238,.88) 75%, rgba(255,216,233,.97) 100%);
-  pointer-events: none; z-index: 1;
-}
-.cover-content {
-  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
-  display: flex; flex-direction: column; align-items: center;
-  padding: 0 7vw 9vh; text-align: center;
-  pointer-events: none; user-select: none;
+  z-index: 1;
 }
 .cover-title {
-  font-size: clamp(2rem, 8vw, 4.5rem); font-weight: 600;
-  color: #9e2f58; line-height: 1.2;
+  position: relative; z-index: 2;
+  font-size: clamp(2.4rem, 11vw, 4.5rem); font-weight: 600;
+  letter-spacing: .02em; color: #9e2f58;
   text-shadow: 0 2px 18px rgba(255,245,250,.95);
-  margin-bottom: .35em;
-}
-.cover-tag {
-  font-size: .8rem; font-weight: 500; letter-spacing: .3em;
-  color: #b86a88; text-transform: uppercase; margin-bottom: .9em;
-  text-shadow: 0 1px 10px rgba(255,245,250,.95);
-}
-.cover-names {
-  font-size: clamp(1.1rem, 3.6vw, 1.6rem); font-weight: 500;
-  letter-spacing: .18em; color: #7a3a52; margin-bottom: .5em;
-  text-shadow: 0 1px 10px rgba(255,245,250,.95);
-}
-.cover-date {
-  font-size: clamp(.9rem, 2.6vw, 1.1rem); letter-spacing: .22em;
-  color: #8b5f70; text-shadow: 0 1px 8px rgba(255,245,250,.95);
+  padding: 0 6vw 9vh;
+  text-align: center;
 }
 
 /* ---------- 加载进度 / 开启按钮 ---------- */
 .open-wrap {
-  pointer-events: auto; margin-top: 1.5em;
+  position: relative; z-index: 2;
+  margin-bottom: 9vh;
   width: min(78vw, 320px);
   display: flex; flex-direction: column; align-items: center; gap: 12px;
-  user-select: none;
 }
 .progress-bar {
   width: 100%; height: 6px; border-radius: 999px;
   background: rgba(180,90,130,.18); overflow: hidden;
-  box-shadow: inset 0 1px 2px rgba(150,60,100,.12);
 }
 .progress-fill {
   width: 0%; height: 100%; border-radius: 999px;
@@ -91,7 +72,6 @@ html, body {
 }
 .progress-text {
   font-size: .85rem; letter-spacing: .28em; color: #b86a88;
-  text-shadow: 0 1px 6px rgba(255,245,250,.95);
 }
 .open-btn {
   display: none; align-items: center; gap: 10px;
@@ -105,55 +85,67 @@ html, body {
 }
 .open-btn.show { display: inline-flex; }
 .open-btn:active { transform: scale(.97); }
-.open-btn.hide {
-  opacity: 0; transform: scale(.9);
-  pointer-events: none; animation: none;
-  transition: all .5s ease;
-}
 @keyframes openBtnPulse {
   0%,100% { box-shadow: 0 4px 16px rgba(200,120,150,.22); }
   50%     { box-shadow: 0 4px 24px rgba(210,110,155,.45); }
 }
 
-/* ---------- 请柬页 ---------- */
+/* =====================================================
+   请柬页
+   ===================================================== */
+#invitePage {
+  justify-content: flex-start;
+  padding: 3vh 5vw 5vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
 #canvas {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-  display: block; z-index: 1;
+  position: fixed; inset: 0; z-index: 0;
+  width: 100%; height: 100%;
+  display: block; pointer-events: none;
 }
-.invite-content {
-  position: relative; z-index: 2;
+.invite-inner {
+  position: relative; z-index: 1;
+  width: 100%;
   display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  width: 100%; height: 100%; padding: 5vh 4vw;
-  pointer-events: none; user-select: none;
+  align-items: center; text-align: center;
 }
-.title {
-  font-size: clamp(2rem, 10vw, 6rem); font-weight: 600;
-  color: #9e2f58; line-height: 1.2; text-align: center;
-  white-space: nowrap;
+
+/* 请柬顶部小图 */
+.invite-photo {
+  width: min(70vw, 280px);
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 16px;
+  box-shadow: 0 8px 28px rgba(200,120,150,.28);
+  margin-bottom: 4vh;
+  user-select: none; -webkit-user-drag: none;
+  opacity: 0; transition: opacity .8s ease;
+}
+.invite-photo.loaded { opacity: 1; }
+
+.invite-title {
+  font-size: clamp(1.5rem, 6vw, 2.2rem); font-weight: 600;
+  color: #9e2f58; line-height: 1.3; white-space: nowrap;
   text-shadow: 0 2px 16px rgba(255,200,220,.8);
 }
 .wedding-tag {
   font-size: .8rem; font-weight: 500; letter-spacing: .35em;
   color: #b86a88; margin-top: .9em; text-transform: uppercase;
-  text-shadow: 0 1px 8px rgba(255,220,235,.9);
 }
 .names {
   font-size: 1.35rem; font-weight: 500; color: #7a3a52;
   letter-spacing: .12em; margin-top: 1em; white-space: nowrap;
-  text-shadow: 0 1px 8px rgba(255,220,235,.9);
 }
 .subtitle {
   font-size: 1rem; color: #8b5f70; letter-spacing: .06em;
-  margin-top: .6em; max-width: 90vw; text-align: center;
-  text-shadow: 0 1px 6px rgba(255,225,238,.9);
+  margin-top: .6em; text-align: center;
 }
 .map-links {
   display: flex; gap: 10px; margin-top: 1.8em;
   flex-wrap: wrap; justify-content: center;
 }
 .map-link {
-  pointer-events: auto;
   display: inline-flex; align-items: center; gap: 8px;
   padding: 10px 18px; border-radius: 999px;
   background: rgba(255,248,252,.96);
@@ -166,38 +158,6 @@ html, body {
 }
 .map-link:active { transform: scale(.96); }
 .map-link svg { flex-shrink: 0; opacity: .9; }
-
-/* ---------- 右侧圆点 ---------- */
-.dots {
-  position: fixed; right: 10px; top: 50%;
-  transform: translateY(-50%);
-  display: flex; flex-direction: column; gap: 10px; z-index: 10;
-  opacity: 0; transition: opacity .6s ease;
-}
-.dots.show { opacity: 1; }
-.dot {
-  width: 9px; height: 9px; border-radius: 50%;
-  background: rgba(180,90,130,.28);
-  border: none; padding: 0; cursor: pointer;
-  transition: all .3s ease;
-}
-.dot.active { background: #b0416e; transform: scale(1.35); }
-
-/* ---------- 上滑提示 ---------- */
-.swipe-hint {
-  position: fixed; bottom: 16px; left: 50%;
-  transform: translateX(-50%);
-  z-index: 10; color: #b86a88;
-  font-size: .78rem; letter-spacing: .22em;
-  opacity: 0; transition: opacity .5s ease;
-  pointer-events: none;
-  animation: bounce 2s infinite;
-}
-.swipe-hint.show { opacity: .85; }
-@keyframes bounce {
-  0%,100% { transform: translateX(-50%) translateY(0); }
-  50%     { transform: translateX(-50%) translateY(-6px); }
-}
 
 /* ---------- 音乐开关 ---------- */
 .music-toggle {
@@ -239,205 +199,117 @@ html, body {
   </svg>
 </button>
 
-<div id="pages">
+<!-- ================= 封面页 ================= -->
+<section class="page active" id="coverPage">
+  <img id="coverImg" src="photo-1.jpg" alt="婚纱照封面" fetchpriority="high" decoding="async">
+  <div class="cover-title">别来无恙啊</div>
 
-  <!-- 封面 -->
-  <section class="page cover-page">
-    <img data-src="photo-1.jpg" alt="婚纱照封面" fetchpriority="high" decoding="async">
-    <div class="cover-mask"></div>
-    <div class="cover-content">
-      <div class="cover-title">别来无恙啊</div>
-      <div class="cover-tag">Wedding Invitation</div>
-      <div class="cover-names">季晨阳 ♡ 许慧敏</div>
-      <div class="cover-date">2026.11.14</div>
-
-      <div class="open-wrap" id="openWrap">
-        <div class="progress-bar" id="progressBar">
-          <div class="progress-fill" id="progressFill"></div>
-        </div>
-        <div class="progress-text" id="progressText">正在加载 0%</div>
-        <button class="open-btn" id="openBtn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2"
-               stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
-            <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
-          </svg>
-          开启邀请函
-        </button>
-      </div>
+  <div class="open-wrap" id="openWrap">
+    <div class="progress-bar" id="progressBar">
+      <div class="progress-fill" id="progressFill"></div>
     </div>
-  </section>
+    <div class="progress-text" id="progressText">正在加载 0%</div>
+    <button class="open-btn" id="openBtn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+        <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+      </svg>
+      开启邀请函
+    </button>
+  </div>
+</section>
 
-  <!-- 请柬页 -->
-  <section class="page invite-page">
-    <canvas id="canvas"></canvas>
-    <div class="invite-content">
-      <div class="title" id="titleText">有幸相邀，盼君赴约</div>
-      <div class="wedding-tag">Wedding Invitation</div>
-      <div class="names">季晨阳 ♡ 许慧敏</div>
-      <div class="subtitle">2026.11.14（周六）午宴</div>
-      <div class="subtitle">富东大酒店（园区店）</div>
-      <div class="map-links">
-        <a class="map-link" href="https://surl.amap.com/88qmZiK1o5t8" target="_blank" rel="noopener">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/>
-          </svg>高德导航
-        </a>
-        <a class="map-link" href="https://j.map.baidu.com/a6/2cFM" target="_blank" rel="noopener">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/>
-          </svg>百度导航
-        </a>
-      </div>
+<!-- ================= 请柬页 ================= -->
+<section class="page" id="invitePage">
+  <canvas id="canvas"></canvas>
+  <div class="invite-inner">
+    <img class="invite-photo" id="invitePhoto" src="photo-1.jpg" alt="婚纱照" decoding="async">
+
+    <div class="invite-title">盼君赴约</div>
+    <div class="wedding-tag">Wedding Invitation</div>
+    <div class="names">季晨阳 ♡ 许慧敏</div>
+    <div class="subtitle">2026.11.14（周六）午宴</div>
+    <div class="subtitle">富东大酒店（园区店）</div>
+
+    <div class="map-links">
+      <a class="map-link" href="https://surl.amap.com/88qmZiK1o5t8" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/>
+        </svg>高德导航
+      </a>
+      <a class="map-link" href="https://j.map.baidu.com/a6/2cFM" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/>
+        </svg>百度导航
+      </a>
     </div>
-  </section>
-
-</div>
-
-<div class="dots" id="dots"></div>
-<div class="swipe-hint" id="swipeHint">上滑查看 ↑</div>
+  </div>
+</section>
 
 <script>
 (function () {
-  // ========================================================
-  //  一、初始化图片 src（仅手机端 photo-N.jpg）
-  // ========================================================
-  const imgs = document.querySelectorAll('.page img[data-src]');
-  imgs.forEach(img => {
-    const src = img.getAttribute('data-src');
-    if (src) img.src = src;
-
-    // 图片渐显
-    const markLoaded = () => img.classList.add('loaded');
-    if (img.complete && img.naturalWidth > 0) markLoaded();
-    else {
-      img.addEventListener('load', markLoaded, { once: true });
-      img.addEventListener('error', markLoaded, { once: true });
-    }
-  });
-
-  // ========================================================
-  //  二、滑动翻页控制（两页：封面 / 请柬）
-  // ========================================================
-  const pagesEl   = document.getElementById('pages');
-  const pageEls   = Array.from(pagesEl.querySelectorAll('.page'));
-  const dotsEl    = document.getElementById('dots');
-  const swipeHint = document.getElementById('swipeHint');
-  const total     = pageEls.length;
-
-  let current = 0, animating = false, autoTimer = null, started = false;
-  const AUTO_DELAY = 10000, ANIM_DURATION = 750;
-
-  pageEls.forEach((_, i) => {
-    const b = document.createElement('button');
-    b.className = 'dot' + (i === 0 ? ' active' : '');
-    b.setAttribute('aria-label', '第 ' + (i + 1) + ' 页');
-    b.addEventListener('click', () => goTo(i));
-    dotsEl.appendChild(b);
-  });
-  const dotEls = Array.from(dotsEl.children);
-
-  function goTo(index) {
-    if (animating) return;
-    index = Math.max(0, Math.min(total - 1, index));
-    if (index === current) { resetAuto(); return; }
-    animating = true;
-    current = index;
-    pagesEl.style.transform = 'translateY(-' + (current * 100) + '%)';
-    dotEls.forEach((d, i) => d.classList.toggle('active', i === current));
-    updateHint();
-    if (current === total - 1) {
-      clearAuto();
-      startParticlesOnce();
-    } else {
-      resetAuto();
-    }
-    setTimeout(() => { animating = false; }, ANIM_DURATION);
-  }
-  const next = () => goTo(current + 1);
-  const prev = () => goTo(current - 1);
-
-  function updateHint() {
-    swipeHint.classList.toggle('show', started && current === 0 && total > 1);
-  }
-  function clearAuto() {
-    if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
-  }
-  function resetAuto() {
-    clearAuto();
-    if (!started || current >= total - 1) return;
-    autoTimer = setTimeout(() => {
-      if (!animating) next(); else resetAuto();
-    }, AUTO_DELAY);
-  }
-
-  // 触摸滑页
-  let touchStartY = 0, touching = false;
-  window.addEventListener('touchstart', e => {
-    if (!started || e.touches.length !== 1) return;
-    touchStartY = e.touches[0].clientY;
-    touching = true;
-  }, { passive: true });
-  window.addEventListener('touchmove', e => {
-    if (!touching) return;
-    const dy = e.touches[0].clientY - touchStartY;
-    if (Math.abs(dy) > 50) {
-      touching = false;
-      dy < 0 ? next() : prev();
-    }
-  }, { passive: true });
-  window.addEventListener('touchend', () => { touching = false; }, { passive: true });
-
-  window.addEventListener('keydown', e => {
-    if (!started) return;
-    if (e.key === 'ArrowDown' || e.key === 'PageDown') next();
-    if (e.key === 'ArrowUp'   || e.key === 'PageUp')  prev();
-  });
-
-  // ========================================================
-  //  三、加载进度 + 开启邀请函
-  // ========================================================
-  const bgMusic      = document.getElementById('bgMusic');
-  const musicToggle  = document.getElementById('musicToggle');
-  const openBtn      = document.getElementById('openBtn');
+  const coverImg   = document.getElementById('coverImg');
+  const inviteImg  = document.getElementById('invitePhoto');
+  const coverPage  = document.getElementById('coverPage');
+  const invitePage = document.getElementById('invitePage');
+  const openBtn    = document.getElementById('openBtn');
   const progressBar  = document.getElementById('progressBar');
   const progressFill = document.getElementById('progressFill');
   const progressText = document.getElementById('progressText');
+  const bgMusic    = document.getElementById('bgMusic');
+  const musicToggle= document.getElementById('musicToggle');
 
-  const totalCount = imgs.length + 1;
-  let doneCount = 0, progressDone = false;
+  // ---------- 图片渐显 ----------
+  function fadeIn(img) {
+    const mark = () => img.classList.add('loaded');
+    if (img.complete && img.naturalWidth > 0) mark();
+    else {
+      img.addEventListener('load', mark, { once: true });
+      img.addEventListener('error', mark, { once: true });
+    }
+  }
+  fadeIn(coverImg);
+  fadeIn(inviteImg);
+
+  // ---------- 加载进度 ----------
+  const resources = [coverImg, inviteImg, bgMusic];
+  const total = resources.length;
+  let done = 0, finished = false;
 
   function tick() {
-    if (progressDone) return;
-    doneCount++;
-    const percent = Math.min(100, Math.round(doneCount / totalCount * 100));
+    if (finished) return;
+    done++;
+    const percent = Math.min(100, Math.round(done / total * 100));
     progressFill.style.width = percent + '%';
     progressText.textContent = '正在加载 ' + percent + '%';
-    if (doneCount >= totalCount) {
-      progressDone = true;
+    if (done >= total) {
+      finished = true;
       progressBar.style.display = 'none';
       progressText.style.display = 'none';
       openBtn.classList.add('show');
     }
   }
 
-  // 图片
-  imgs.forEach(img => {
-    if (img.complete && img.naturalWidth > 0) tick();
-    else {
-      img.addEventListener('load', tick, { once: true });
-      img.addEventListener('error', tick, { once: true });
+  resources.forEach(r => {
+    if (r === bgMusic) {
+      if (bgMusic.readyState >= 2) tick();
+      else {
+        bgMusic.addEventListener('loadeddata', tick, { once: true });
+        bgMusic.addEventListener('error', tick, { once: true });
+        setTimeout(tick, 3000);
+      }
+    } else {
+      if (r.complete && r.naturalWidth > 0) tick();
+      else {
+        r.addEventListener('load', tick, { once: true });
+        r.addEventListener('error', tick, { once: true });
+      }
     }
   });
-  // 音频（复用 bgMusic，不再 new Audio 造成重复请求）
-  if (bgMusic.readyState >= 2) tick();
-  else {
-    bgMusic.addEventListener('loadeddata', tick, { once: true });
-    bgMusic.addEventListener('error', tick, { once: true });
-    setTimeout(tick, 3000); // 兜底
-  }
 
+  // ---------- 音乐 ----------
   let musicPlaying = false;
 
   function playMusic() {
@@ -448,38 +320,28 @@ html, body {
     }).catch(() => {});
   }
 
-  function doOpen() {
-    if (started) return;
-    started = true;
-    playMusic();
-    openBtn.classList.add('hide');
-    dotsEl.classList.add('show');
-    musicToggle.classList.add('show');
-    setTimeout(() => { goTo(1); resetAuto(); }, 380);
-  }
-  openBtn.addEventListener('click', doOpen);
-
-  musicToggle.addEventListener('click', e => {
-    e.stopPropagation();
+  musicToggle.addEventListener('click', () => {
     if (musicPlaying) {
       bgMusic.pause();
       musicPlaying = false;
       musicToggle.classList.remove('playing');
     } else {
-      bgMusic.volume = 0.6;
-      bgMusic.play().then(() => {
-        musicPlaying = true;
-        musicToggle.classList.add('playing');
-      }).catch(() => {});
+      playMusic();
     }
   });
 
-  // ========================================================
-  //  四、爱心粒子（仅最后一页）
-  // ========================================================
-  const canvas  = document.getElementById('canvas');
-  const ctx     = canvas.getContext('2d');
-  const titleEl = document.getElementById('titleText');
+  // ---------- 开启邀请函 ----------
+  openBtn.addEventListener('click', () => {
+    playMusic();
+    coverPage.classList.remove('active');
+    invitePage.classList.add('active');
+    musicToggle.classList.add('show');
+    setTimeout(startParticlesOnce, 300);
+  });
+
+  // ---------- 爱心粒子 ----------
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
   let particles = [], particleStarted = false;
   let touchX = -9999, touchY = -9999, touchActive = false;
 
@@ -487,21 +349,6 @@ html, body {
     canvas.width  = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
     initParticles();
-    adjustTitleFontSize();
-  }
-
-  function adjustTitleFontSize() {
-    if (!titleEl) return;
-    const maxWidth  = window.innerWidth * 0.9;
-    const baseSize  = 16;
-    titleEl.style.fontSize = baseSize + 'px';
-    const w = titleEl.scrollWidth;
-    if (!w) return;
-    let size = baseSize * (maxWidth / w);
-    size = Math.min(160, Math.max(32, size));
-    size = Math.min(size, window.innerHeight * 0.25);
-    titleEl.style.fontSize = size + 'px';
-    titleEl.style.lineHeight = '1.2';
   }
 
   function initParticles() {
@@ -522,7 +369,6 @@ html, body {
     }
   }
 
-  // 触摸交互（仅手机）
   window.addEventListener('touchmove', e => {
     if (e.touches.length > 0) {
       touchX = e.touches[0].clientX;
@@ -619,14 +465,8 @@ html, body {
   }
 
   window.addEventListener('resize', () => {
-    resizeCanvas();
-    pagesEl.style.transform = 'translateY(-' + (current * 100) + '%)';
+    if (particleStarted) resizeCanvas();
   });
-
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(adjustTitleFontSize);
-  }
-  window.addEventListener('load', adjustTitleFontSize);
 })();
 </script>
 </body>
