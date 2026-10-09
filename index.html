@@ -38,6 +38,7 @@
       width: 100%;
       height: 100%;
       display: flex;
+      flex-direction: column;   /* 新增：让主标题和副标题垂直排列 */
       align-items: center;
       justify-content: center;
       z-index: 2;
@@ -60,10 +61,27 @@
       transition: font-size 0.1s ease; /* 轻微过渡，让自适应不突兀 */
     }
 
+    /* 副标题样式：字号调大、颜色用黑色 */
+    .subtitle {
+      font-size: 1.8rem;           /* 调大后的字号 */
+      font-weight: 400;
+      color: #1d1d1f;              /* 和主标题一致的黑色 */
+      letter-spacing: 0.08em;
+      margin-top: 1.2em;
+      white-space: nowrap;
+      text-align: center;
+      line-height: 1.4;
+      transition: font-size 0.1s ease;
+    }
+
     /* 移动端 cursor 微调 */
     @media (max-width: 600px) {
       body {
         cursor: auto;
+      }
+      .subtitle {
+        font-size: 1.3rem;         /* 小屏上也相应调大 */
+        margin-top: 1em;
       }
     }
   </style>
@@ -73,6 +91,10 @@
   <canvas id="canvas"></canvas>
   <div class="title-wrapper">
     <div class="title" id="titleText">别来无恙啊</div>
+    <!-- 副标题，可自由修改文字内容 -->
+    <div class="subtitle">JCY & XHM</div>
+    <!-- <div class="subtitle">FU DONG DA JIU DIAN</div> -->
+    <div class="subtitle">2026.11.14</div>
   </div>
 
   <script>
