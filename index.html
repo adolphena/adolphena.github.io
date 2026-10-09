@@ -30,7 +30,7 @@
       z-index: 1;
     }
 
-    /* 核心：用 flex 让文字绝对居中，并且强制不换行 */
+    /* 用 flex 让文字绝对居中 */
     .title-wrapper {
       position: fixed;
       top: 0;
@@ -38,34 +38,34 @@
       width: 100%;
       height: 100%;
       display: flex;
-      flex-direction: column;   /* 新增：让主标题和副标题垂直排列 */
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       z-index: 2;
-      pointer-events: none;
+      pointer-events: none;        /* 保留：不挡住爱心粒子交互 */
       user-select: none;
-      /* 防止意外换行 */
       white-space: nowrap;
+      padding: 5vh 4vw;            /* 新增：防止内容贴边/溢出 */
+      box-sizing: border-box;
     }
 
     .title {
-      font-size: clamp(2rem, 10vw, 6rem);  /* 基础大小，后面用JS动态微调 */
+      font-size: clamp(2rem, 10vw, 6rem);
       font-weight: 600;
       letter-spacing: -0.02em;
       color: #1d1d1f;
       line-height: 1.2;
       text-align: center;
-      white-space: nowrap;          /* 关键：禁止换行 */
-      display: inline-block;        /* 让宽度由内容决定，便于JS测量 */
-      padding: 0 0.1em;            /* 避免极端情况贴边 */
-      transition: font-size 0.1s ease; /* 轻微过渡，让自适应不突兀 */
+      white-space: nowrap;
+      display: inline-block;
+      padding: 0 0.1em;
+      transition: font-size 0.1s ease;
     }
 
-    /* 副标题样式：字号调大、颜色用黑色 */
     .subtitle {
-      font-size: 1.8rem;           /* 调大后的字号 */
+      font-size: 1.8rem;
       font-weight: 400;
-      color: #1d1d1f;              /* 和主标题一致的黑色 */
+      color: #1d1d1f;
       letter-spacing: 0.08em;
       margin-top: 1.2em;
       white-space: nowrap;
@@ -74,14 +74,55 @@
       transition: font-size 0.1s ease;
     }
 
-    /* 移动端 cursor 微调 */
+    /* ---------- 地图链接按钮 ---------- */
+    .map-link {
+      pointer-events: auto;        /* 关键：让链接可点击 */
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 2em;
+      padding: 10px 22px;
+      border-radius: 999px;
+      background: rgba(255, 100, 150, 0.10);
+      border: 1px solid rgba(255, 100, 150, 0.35);
+      color: #d6336c;
+      font-size: 1rem;
+      letter-spacing: 0.05em;
+      text-decoration: none;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .map-link:hover {
+      background: rgba(255, 100, 150, 0.20);
+      border-color: rgba(255, 100, 150, 0.55);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(255, 100, 150, 0.25);
+    }
+
+    .map-link:active {
+      transform: translateY(0);
+    }
+
+    .map-link svg {
+      flex-shrink: 0;
+      opacity: 0.85;
+    }
+
+    /* 移动端微调 */
     @media (max-width: 600px) {
       body {
         cursor: auto;
       }
       .subtitle {
-        font-size: 1.3rem;         /* 小屏上也相应调大 */
+        font-size: 1.3rem;
         margin-top: 1em;
+      }
+      .map-link {
+        margin-top: 1.5em;
+        padding: 9px 18px;
+        font-size: 0.9rem;
       }
     }
   </style>
@@ -91,10 +132,18 @@
   <canvas id="canvas"></canvas>
   <div class="title-wrapper">
     <div class="title" id="titleText">别来无恙啊</div>
-    <!-- 副标题，可自由修改文字内容 -->
-    <div class="subtitle">JCY & XHM</div>
+    <div class="subtitle">JCY &amp; XHM</div>
     <div class="subtitle">2026.11.14</div>
     <div class="subtitle">富东大酒店(园区店)</div>
+
+    <a class="map-link" href="https://j.map.baidu.com/cc/C6q"
+       target="_blank" rel="noopener">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0
+                 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/>
+      </svg>
+      在地图中查看位置
+    </a>
   </div>
 
   <script>
@@ -106,51 +155,39 @@
       let mouse = { x: -9999, y: -9999 };
       let mouseActive = false;
 
-      // 标题元素
       const titleEl = document.getElementById('titleText');
 
-      // 屏幕尺寸变化时重新调整画布和粒子，以及标题字号
       function resize() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         initParticles();
-        adjustTitleFontSize();   // 每次resize都重新计算字体大小
+        adjustTitleFontSize();
       }
 
-      // 自适应字号：保证文字在一行内完整显示，且不过小
+      // 自适应字号
       function adjustTitleFontSize() {
         if (!titleEl) return;
 
-        const text = titleEl.textContent || "别来无恙啊!";
         const containerWidth = window.innerWidth;
-
-        // 最大允许宽度 = 视口宽度 * 0.9 (两侧各留5%空隙)
         const maxWidth = containerWidth * 0.9;
 
-        // 重置字号为可测量的基准值，用 1rem = 16px 作为参考
-        const baseFontSize = 16; 
+        const baseFontSize = 16;
         titleEl.style.fontSize = baseFontSize + 'px';
 
-        // 测量当前文字宽度
-        const textWidth = titleEl.scrollWidth; // 包含内边距
+        const textWidth = titleEl.scrollWidth;
+        if (textWidth === 0) return;
 
-        if (textWidth === 0) return; // 极端情况
-
-        // 计算需要的字体大小（线性比例）
         let newFontSize = baseFontSize * (maxWidth / textWidth);
 
-        // 限制最大和最小字号，保证美观和可读性
-        const minFontSize = 32;          // 最小 32px，避免太小
-        const maxFontSize = 160;         // 最大 160px，避免过大
+        const minFontSize = 32;
+        const maxFontSize = 160;
         newFontSize = Math.min(maxFontSize, Math.max(minFontSize, newFontSize));
 
-        // 同时考虑一下视口高度，避免字太大垂直溢出 (但保持单行优先，所以适当降低上限)
-        const maxHeight = window.innerHeight * 0.25; // 最多占高度的25%
+        const maxHeight = window.innerHeight * 0.25;
         if (newFontSize > maxHeight) {
           newFontSize = Math.min(newFontSize, maxHeight);
         }
 
-        // 应用字号，并保持行高紧凑
         titleEl.style.fontSize = newFontSize + 'px';
         titleEl.style.lineHeight = '1.2';
       }
@@ -158,9 +195,7 @@
       // 初始化粒子
       function initParticles() {
         particles = [];
-        // 根据画布面积决定粒子数量（保持性能）
-        const count = Math.floor((canvas.width * canvas.height) / 3500); // 略微减少数量，让爱心更清晰
-        // 但至少保证有足够数量
+        const count = Math.floor((canvas.width * canvas.height) / 3500);
         const finalCount = Math.max(80, Math.min(count, 400));
 
         for (let i = 0; i < finalCount; i++) {
@@ -171,7 +206,7 @@
             vy: (Math.random() - 0.5) * 0.4,
             baseVx: 0,
             baseVy: 0,
-            size: Math.random() * 6 + 4,   // 4~10 大小
+            size: Math.random() * 6 + 4,
             alpha: Math.random() * 0.3 + 0.1,
             rotation: Math.random() * Math.PI * 2
           });
@@ -190,12 +225,11 @@
 
       window.addEventListener('mouseleave', () => {
         mouseActive = false;
-        // 鼠标离开后可以重置坐标，避免吸附
         mouse.x = -9999;
         mouse.y = -9999;
       });
 
-      // 触摸支持（移动端）
+      // 触摸支持
       window.addEventListener('touchmove', (e) => {
         if (e.touches.length > 0) {
           const touch = e.touches[0];
@@ -211,17 +245,15 @@
         mouse.y = -9999;
       });
 
-      // ---------- 绘制爱心 ----------
+      // 绘制爱心
       function drawHeart(ctx, x, y, size, rotation, color) {
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(rotation);
-        // 缩放，让爱心大小合适 (原大小基于16px设计)
-        const s = size / 16; 
+        const s = size / 16;
         ctx.scale(s, s);
 
         ctx.beginPath();
-        // 贝塞尔曲线爱心
         ctx.moveTo(0, 4);
         ctx.bezierCurveTo(0, 0, -8, 0, -8, 6);
         ctx.bezierCurveTo(-8, 11, -4, 14, 0, 18);
@@ -234,48 +266,39 @@
         ctx.restore();
       }
 
-      // ---------- 动画循环 ----------
+      // 动画循环
       function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 当前鼠标是否激活且坐标有效
         const hasMouse = mouseActive && mouse.x > -1000 && mouse.y > -1000;
 
         particles.forEach(p => {
-          // 鼠标吸引力
           if (hasMouse) {
             const dx = mouse.x - p.x;
             const dy = mouse.y - p.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            const maxDist = 180; // 影响范围
+            const maxDist = 180;
 
             if (dist < maxDist && dist > 0) {
               const force = (1 - dist / maxDist) * 0.12;
               p.vx += (dx / dist) * force;
               p.vy += (dy / dist) * force;
-              // 鼠标靠近时，爱心轻微旋转
               p.rotation += 0.05;
             }
           }
 
-          // 恢复自由速度（缓慢回归基础速度）
           p.vx += (p.baseVx - p.vx) * 0.02;
           p.vy += (p.baseVy - p.vy) * 0.02;
-
-          // 自由漂浮时，爱心缓慢自转
           p.rotation += 0.005;
 
-          // 更新位置
           p.x += p.vx;
           p.y += p.vy;
 
-          // 边界穿越（从另一边出现）
           if (p.x < -20) p.x = canvas.width + 20;
           if (p.x > canvas.width + 20) p.x = -20;
           if (p.y < -20) p.y = canvas.height + 20;
           if (p.y > canvas.height + 20) p.y = -20;
 
-          // 绘制爱心，根据鼠标距离设置颜色
           let color;
           if (hasMouse) {
             const dx = mouse.x - p.x;
@@ -283,7 +306,6 @@
             const dist = Math.sqrt(dx * dx + dy * dy);
             if (dist < 180) {
               const t = 1 - dist / 180;
-              // 从深灰渐变到粉红
               const r = Math.round(29 + (255 - 29) * t);
               const g = Math.round(29 + (100 - 29) * t);
               const b = Math.round(31 + (150 - 31) * t);
@@ -298,7 +320,7 @@
           drawHeart(ctx, p.x, p.y, p.size, p.rotation, color);
         });
 
-        // 鼠标和附近爱心粒子的连线
+        // 鼠标与附近粒子的连线
         if (hasMouse) {
           particles.forEach(p => {
             const dx = mouse.x - p.x;
@@ -319,35 +341,29 @@
         requestAnimationFrame(animate);
       }
 
-      // ---------- 初始化 ----------
-      // 先设置字体大小，然后监听resize
+      // 初始化
       window.addEventListener('resize', () => {
         resize();
-        // resize中已包含 adjustTitleFontSize
       });
 
-      // 初始调整
       function init() {
-        resize();       // 包含粒子初始化和标题字号调整
+        resize();
         animate();
       }
 
-      // 确保字体加载完成后再测量一次（有些字体异步加载可能会影响宽度）
       if (document.fonts && document.fonts.ready) {
         document.fonts.ready.then(() => {
           adjustTitleFontSize();
         });
       }
 
-      // 页面显示后再次调整，以防初始隐藏导致宽度测量错误
       window.addEventListener('load', () => {
         adjustTitleFontSize();
       });
 
-      // 启动
       init();
 
-      // 额外：有些浏览器在旋转屏幕后resize事件稍慢，定时检测一次
+      // 旋转屏幕后兜底检测
       let lastWidth = window.innerWidth;
       setInterval(() => {
         if (window.innerWidth !== lastWidth) {
