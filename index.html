@@ -80,7 +80,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-end;
-      padding: 0 6vw 12vh;
+      padding: 0 6vw 9vh;
       text-align: center;
       pointer-events: none;
       user-select: none;
@@ -121,6 +121,53 @@
       letter-spacing: 0.22em;
       color: #8b5f70;
       text-shadow: 0 1px 8px rgba(255, 245, 250, 0.95);
+    }
+
+    /* ---------- 封面「开启邀请函」按钮 ---------- */
+    .open-btn {
+      pointer-events: auto;
+      margin-top: 1.6em;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 34px;
+      border-radius: 999px;
+      border: 1px solid rgba(160, 60, 110, 0.6);
+      background: rgba(255, 248, 252, 0.95);
+      color: #8a2450;
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 4px 16px rgba(200, 120, 150, 0.22);
+      transition: all 0.28s ease;
+      animation: openBtnPulse 2.6s ease-in-out infinite;
+    }
+    .open-btn:hover {
+      background: #fff0f6;
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 8px 22px rgba(210, 110, 155, 0.35);
+    }
+    .open-btn:active {
+      transform: translateY(0) scale(0.98);
+    }
+    .open-btn svg {
+      flex-shrink: 0;
+      opacity: 0.9;
+    }
+    @keyframes openBtnPulse {
+      0%, 100% { box-shadow: 0 4px 16px rgba(200, 120, 150, 0.22); }
+      50% { box-shadow: 0 4px 24px rgba(210, 110, 155, 0.45); }
+    }
+
+    /* 点击后按钮淡出消失 */
+    .open-btn.hide {
+      opacity: 0;
+      transform: scale(0.9);
+      pointer-events: none;
+      transition: all 0.5s ease;
     }
 
     /* =====================================================
@@ -288,7 +335,10 @@
       position: fixed; right: 18px; top: 50%;
       transform: translateY(-50%);
       display: flex; flex-direction: column; gap: 10px; z-index: 10;
+      opacity: 0;
+      transition: opacity 0.6s ease;
     }
+    .dots.show { opacity: 1; }
     .dot {
       width: 9px; height: 9px; border-radius: 50%;
       background: rgba(180, 90, 130, 0.28);
@@ -331,6 +381,13 @@
       box-shadow: 0 2px 10px rgba(200, 120, 150, 0.18);
       transition: all 0.25s ease;
       -webkit-tap-highlight-color: transparent;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease, background 0.25s ease, transform 0.25s ease;
+    }
+    .music-toggle.show {
+      opacity: 1;
+      pointer-events: auto;
     }
     .music-toggle:hover {
       background: #fff0f6;
@@ -355,7 +412,7 @@
 
     /* ---------- 移动端适配 ---------- */
     @media (max-width: 600px) {
-      .cover-content { padding: 0 7vw 13vh; }
+      .cover-content { padding: 0 7vw 9vh; }
       .wedding-tag { font-size: 0.8rem; letter-spacing: 0.3em; }
       .names { font-size: 1.35rem; margin-top: 1em; }
       .subtitle {
@@ -370,6 +427,7 @@
       .photo-overlay { padding: 0 7vw 12vh; }
       .photo-overlay .overlay-verse { font-size: 0.9rem; }
       .music-toggle { top: 14px; right: 14px; width: 36px; height: 36px; }
+      .open-btn { padding: 12px 28px; font-size: 0.95rem; margin-top: 1.3em; }
     }
   </style>
 </head>
@@ -378,7 +436,7 @@
   <!-- 背景音乐（文件放在与 HTML 同目录下，按实际文件名修改 src） -->
   <audio id="bgMusic" src="music.mp3" loop preload="auto"></audio>
 
-  <!-- 右上角音乐开关 -->
+  <!-- 右上角音乐开关（初始隐藏，开启后显示） -->
   <button class="music-toggle" id="musicToggle" aria-label="音乐开关">
     <svg class="icon-music" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
       <path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/>
@@ -405,6 +463,15 @@
         <div class="cover-tag">Wedding Invitation</div>
         <div class="cover-names">季晨阳 ♡ 许慧敏</div>
         <div class="cover-date">2026.11.14</div>
+
+        <!-- 开启邀请函按钮 -->
+        <button class="open-btn" id="openBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+            <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+          </svg>
+          开启邀请函
+        </button>
       </div>
     </section>
 
@@ -456,7 +523,7 @@
     <section class="page invite-page" data-page="5">
       <canvas id="canvas"></canvas>
       <div class="invite-content">
-        <div class="title" id="titleText">有幸相邀，盼君赴约</div>
+        <div class="title" id="titleText">盼君赴约</div>
         <div class="wedding-tag">Wedding Invitation</div>
         <div class="names">季晨阳 ♡ 许慧敏</div>
         <div class="subtitle">2026.11.14（周六）午宴</div>
@@ -493,11 +560,13 @@
       const pageEls = Array.from(pagesEl.querySelectorAll('.page'));
       const dotsEl = document.getElementById('dots');
       const swipeHint = document.getElementById('swipeHint');
+      const openBtn = document.getElementById('openBtn');
       const total = pageEls.length;
 
       let current = 0;
       let animating = false;
       let autoTimer = null;
+      let started = false;          // 是否已点击「开启邀请函」
       const AUTO_DELAY = 5000;      // 5 秒无操作自动翻页
       const ANIM_DURATION = 750;    // 与 CSS transition 一致
 
@@ -530,7 +599,7 @@
       function prev() { goTo(current - 1); }
 
       function updateHint() {
-        if (current === 0 && total > 1) swipeHint.classList.add('show');
+        if (started && current === 0 && total > 1) swipeHint.classList.add('show');
         else swipeHint.classList.remove('show');
       }
 
@@ -539,7 +608,7 @@
       }
       function resetAuto() {
         clearAuto();
-        if (current >= total - 1) return;
+        if (!started || current >= total - 1) return;
         autoTimer = setTimeout(() => {
           if (!animating) next();
           else resetAuto();
@@ -549,6 +618,7 @@
       // 滚轮（电脑）
       let wheelLock = false;
       window.addEventListener('wheel', (e) => {
+        if (!started) return;               // 封面未开启时，滚轮不翻页
         if (Math.abs(e.deltaY) < 8) return;
         if (wheelLock) return;
         wheelLock = true;
@@ -560,6 +630,7 @@
       let touchStartY = 0;
       let touching = false;
       window.addEventListener('touchstart', (e) => {
+        if (!started) return;               // 封面未开启时，滑动不翻页
         if (e.touches.length !== 1) return;
         touchStartY = e.touches[0].clientY;
         touching = true;
@@ -576,17 +647,72 @@
 
       // 键盘（方便电脑调试）
       window.addEventListener('keydown', (e) => {
+        if (!started) return;
         if (e.key === 'ArrowDown' || e.key === 'PageDown') next();
         if (e.key === 'ArrowUp' || e.key === 'PageUp') prev();
       });
 
       // 初始化 active 类
       pageEls.forEach((p, i) => p.classList.toggle('active', i === 0));
-      updateHint();
-      resetAuto();
 
       // ========================================================
-      //  二、图片渐显 + 加载状态
+      //  二、开启邀请函：播放音乐 + 翻到第二页
+      // ========================================================
+      const bgMusic = document.getElementById('bgMusic');
+      const musicToggle = document.getElementById('musicToggle');
+      let musicPlaying = false;
+
+      function playMusic() {
+        if (!bgMusic) return;
+        bgMusic.volume = 0.6;          // 音量 0~1，按需调整
+        bgMusic.play().then(() => {
+          musicPlaying = true;
+          musicToggle.classList.add('playing');
+        }).catch(() => {
+          // 播放失败（极少见），不影响翻页
+        });
+      }
+
+      openBtn.addEventListener('click', () => {
+        if (started) return;
+        started = true;
+
+        // 1. 播放音乐
+        playMusic();
+
+        // 2. 按钮淡出
+        openBtn.classList.add('hide');
+
+        // 3. 显示圆点 + 音乐开关
+        dotsEl.classList.add('show');
+        musicToggle.classList.add('show');
+
+        // 4. 短暂延迟后翻到第二页（让按钮淡出有一点余韵）
+        setTimeout(() => {
+          goTo(1);
+          resetAuto();
+        }, 380);
+      });
+
+      // 点击右上角开关，暂停/继续
+      musicToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!bgMusic) return;
+        if (musicPlaying) {
+          bgMusic.pause();
+          musicPlaying = false;
+          musicToggle.classList.remove('playing');
+        } else {
+          bgMusic.volume = 0.6;
+          bgMusic.play().then(() => {
+            musicPlaying = true;
+            musicToggle.classList.add('playing');
+          }).catch(() => {});
+        }
+      });
+
+      // ========================================================
+      //  三、图片渐显 + 加载状态
       // ========================================================
       function bindImageFade(img) {
         const page = img.closest('.page');
@@ -604,14 +730,14 @@
           img.addEventListener('load', markLoaded);
           img.addEventListener('error', () => {
             page.classList.remove('loading');
-            img.classList.add('loaded'); // 失败也显示，避免空白
+            img.classList.add('loaded');
           });
         }
       }
       document.querySelectorAll('.page img').forEach(bindImageFade);
 
       // ========================================================
-      //  三、爱心粒子（最后一页）
+      //  四、爱心粒子（最后一页）
       // ========================================================
       const canvas = document.getElementById('canvas');
       const ctx = canvas.getContext('2d');
@@ -786,56 +912,6 @@
       setInterval(() => {
         if (current === total - 1) startParticlesOnce();
       }, 300);
-
-      // ========================================================
-      //  四、背景音乐开关
-      // ========================================================
-      const bgMusic = document.getElementById('bgMusic');
-      const musicToggle = document.getElementById('musicToggle');
-      let musicPlaying = false;
-
-      // 尝试播放（用户首次交互后触发）
-      function tryPlayMusic() {
-        if (!bgMusic || musicPlaying) return;
-        bgMusic.volume = 0.6;          // 音量 0~1，按需调整
-        const p = bgMusic.play();
-        if (p && p.catch) {
-          p.then(() => {
-            musicPlaying = true;
-            musicToggle.classList.add('playing');
-          }).catch(() => {
-            // 播放失败（比如还没交互），保持静音状态
-          });
-        }
-      }
-
-      // 首次任意交互（点击/触摸/按键）时自动尝试播放一次
-      function onFirstInteract() {
-        tryPlayMusic();
-        window.removeEventListener('pointerdown', onFirstInteract);
-        window.removeEventListener('touchstart', onFirstInteract);
-        window.removeEventListener('keydown', onFirstInteract);
-      }
-      window.addEventListener('pointerdown', onFirstInteract);
-      window.addEventListener('touchstart', onFirstInteract);
-      window.addEventListener('keydown', onFirstInteract);
-
-      // 点击开关手动控制
-      musicToggle.addEventListener('click', (e) => {
-        e.stopPropagation();   // 避免和首次交互冲突
-        if (!bgMusic) return;
-        if (musicPlaying) {
-          bgMusic.pause();
-          musicPlaying = false;
-          musicToggle.classList.remove('playing');
-        } else {
-          bgMusic.volume = 0.6;
-          bgMusic.play().then(() => {
-            musicPlaying = true;
-            musicToggle.classList.add('playing');
-          }).catch(() => {});
-        }
-      });
     })();
   </script>
 </body>
