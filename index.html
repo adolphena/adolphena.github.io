@@ -131,7 +131,6 @@
       user-select: none;
     }
 
-    /* 进度条容器 */
     .progress-bar {
       width: 100%;
       height: 6px;
@@ -148,7 +147,6 @@
       transition: width 0.25s ease;
     }
 
-    /* 进度文字 / 开启按钮（同一位置切换） */
     .progress-text {
       font-size: 0.85rem;
       letter-spacing: 0.28em;
@@ -157,7 +155,7 @@
     }
 
     .open-btn {
-      display: none;                /* 默认隐藏，加载完显示 */
+      display: none;
       align-items: center;
       gap: 10px;
       padding: 13px 34px;
@@ -197,7 +195,7 @@
     }
 
     /* =====================================================
-       照片页（第 2~5 页）
+       照片页
        ===================================================== */
     .photo-page {
       padding: 0;
@@ -455,7 +453,6 @@
 
   <div id="pages">
 
-    <!-- ===== 第 1 页：封面 ===== -->
     <section class="page cover-page" data-page="0">
       <picture>
         <source media="(max-width: 768px)" srcset="photo-1-mobile.jpg">
@@ -471,7 +468,6 @@
         <div class="cover-names">季晨阳 ♡ 许慧敏</div>
         <div class="cover-date">2026.11.14</div>
 
-        <!-- 进度条 / 开启按钮 -->
         <div class="open-wrap" id="openWrap">
           <div class="progress-bar" id="progressBar">
             <div class="progress-fill" id="progressFill"></div>
@@ -489,7 +485,6 @@
       </div>
     </section>
 
-    <!-- ===== 第 2~5 页：婚纱照 ===== -->
     <section class="page photo-page" data-page="1">
       <picture>
         <source media="(max-width: 768px)" srcset="photo-2-mobile.jpg">
@@ -530,7 +525,6 @@
       </div>
     </section>
 
-    <!-- ===== 第 6 页：请柬 ===== -->
     <section class="page invite-page" data-page="5">
       <canvas id="canvas"></canvas>
       <div class="invite-content">
@@ -576,8 +570,8 @@
       let current = 0;
       let animating = false;
       let autoTimer = null;
-      let started = false;          // 是否已点击「开启邀请函」
-      const AUTO_DELAY = 10000;     // 10 秒无操作自动翻页
+      let started = false;
+      const AUTO_DELAY = 10000;
       const ANIM_DURATION = 750;
 
       pageEls.forEach((_, i) => {
@@ -661,7 +655,7 @@
       pageEls.forEach((p, i) => p.classList.toggle('active', i === 0));
 
       // ========================================================
-      //  二、预加载所有媒体（图片 + 音乐），显示进度
+      //  二、预加载所有媒体，显示进度（音频优化版）
       // ========================================================
       const bgMusic = document.getElementById('bgMusic');
       const musicToggle = document.getElementById('musicToggle');
@@ -672,16 +666,11 @@
 
       let musicPlaying = false;
 
-      // 1. 收集所有需要预加载的资源
-      //    图片：取每个 <picture> 里当前实际生效的 <img> 的 src
-      //    移动端还会用 <source>，这里简单起见，以 <img> 的 src 为准；
-      //    如果想连 mobile 版本也预加载，可把 source 的 srcset 也加进来。
       const imageSrcs = [];
       document.querySelectorAll('.page img').forEach(img => {
         if (img.src) imageSrcs.push(img.src);
       });
 
-      // 音乐
       const musicSrc = bgMusic.getAttribute('src');
 
       const resources = [
@@ -700,7 +689,6 @@
         progressText.textContent = '正在加载 ' + percent + '%';
 
         if (done >= totalCount) {
-          // 全部完成（成功或失败）→ 显示开启按钮
           progressBar.style.display = 'none';
           progressText.style.display = 'none';
           openBtn.classList.add('show');
@@ -709,47 +697,52 @@
 
       function preloadOne(item) {
         return new Promise((resolve) => {
+          let settled = false;
+          const done = () => {
+            if (settled) return;
+            settled = true;
+            loadedCount++;
+            updateProgress();
+            resolve();
+          };
+          const fail = () => {
+            if (settled) return;
+            settled = true;
+            failedCount++;
+            updateProgress();
+            resolve();
+          };
+
           if (item.type === 'image') {
             const img = new Image();
-            img.onload = () => { loadedCount++; updateProgress(); resolve(); };
-            img.onerror = () => { failedCount++; updateProgress(); resolve(); };
+            img.onload = done;
+            img.onerror = fail;
             img.src = item.src;
           } else {
-            // 音频：用一个独立 Audio 预加载，避免影响背景音乐元素本身
+            // 音频：用 loadeddata 代替 canplaythrough，快很多
             const audio = new Audio();
             audio.preload = 'auto';
-            const onDone = () => {
-              loadedCount++; updateProgress(); resolve();
-            };
-            const onFail = () => {
-              failedCount++; updateProgress(); resolve();
-            };
-            audio.addEventListener('canplaythrough', onDone, { once: true });
-            audio.addEventListener('error', onFail, { once: true });
+            audio.addEventListener('loadeddata', done, { once: true });
+            audio.addEventListener('error', fail, { once: true });
             audio.src = item.src;
             audio.load();
 
-            // 兜底：如果 15 秒还没触发 canplaythrough（网络极慢），也算完成，避免卡死
+            // 兜底：3 秒还没 loadeddata 也算完成，避免进度条卡死
             setTimeout(() => {
-              if (!audio._done) {
-                audio._done = true;
-                // 已 resolve 过就不再重复，这里用标志位防重
-              }
-            }, 15000);
+              if (!settled) done();
+            }, 3000);
           }
         });
       }
 
-      // 串行或并行都行，这里并行加载，速度快
       Promise.all(resources.map(preloadOne)).then(() => {
-        // 保险：如果还有没更新到 100% 的情况，强制收尾
         loadedCount = totalCount;
         failedCount = 0;
         updateProgress();
       });
 
       // ========================================================
-      //  三、开启邀请函：播放音乐 + 翻到第二页
+      //  三、开启邀请函
       // ========================================================
       function playMusic() {
         if (!bgMusic) return;
@@ -763,14 +756,10 @@
       function doOpen() {
         if (started) return;
         started = true;
-
         playMusic();
-
         openBtn.classList.add('hide');
-
         dotsEl.classList.add('show');
         musicToggle.classList.add('show');
-
         setTimeout(() => {
           goTo(1);
           resetAuto();
@@ -796,7 +785,7 @@
       });
 
       // ========================================================
-      //  四、图片渐显（预加载已完成，这里只做渐显）
+      //  四、图片渐显
       // ========================================================
       function bindImageFade(img) {
         const page = img.closest('.page');
