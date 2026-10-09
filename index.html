@@ -455,8 +455,7 @@
 
     <section class="page cover-page" data-page="0">
       <picture>
-        <source media="(max-width: 768px)" srcset="photo-1-mobile.jpg">
-        <img src="photo-1.jpg" alt="婚纱照封面"
+        <img data-desktop="photo-1.jpg" data-mobile="photo-1-mobile.jpg" alt="婚纱照封面"
              fetchpriority="high" decoding="async">
       </picture>
 
@@ -487,8 +486,7 @@
 
     <section class="page photo-page" data-page="1">
       <picture>
-        <source media="(max-width: 768px)" srcset="photo-2-mobile.jpg">
-        <img src="photo-2.jpg" alt="婚纱照 2" decoding="async">
+        <img data-desktop="photo-2.jpg" data-mobile="photo-2-mobile.jpg" alt="婚纱照 2" decoding="async">
       </picture>
       <div class="photo-overlay">
         <div class="overlay-verse">朝暮与年岁并往，与你行至天光</div>
@@ -497,8 +495,7 @@
 
     <section class="page photo-page" data-page="2">
       <picture>
-        <source media="(max-width: 768px)" srcset="photo-3-mobile.jpg">
-        <img src="photo-3.jpg" alt="婚纱照 3" decoding="async">
+        <img data-desktop="photo-3.jpg" data-mobile="photo-3-mobile.jpg" alt="婚纱照 3" decoding="async">
       </picture>
       <div class="photo-overlay">
         <div class="overlay-verse">山水一程，三生有幸</div>
@@ -507,8 +504,7 @@
 
     <section class="page photo-page" data-page="3">
       <picture>
-        <source media="(max-width: 768px)" srcset="photo-4-mobile.jpg">
-        <img src="photo-4.jpg" alt="婚纱照 4" decoding="async">
+        <img data-desktop="photo-4.jpg" data-mobile="photo-4-mobile.jpg" alt="婚纱照 4" decoding="async">
       </picture>
       <div class="photo-overlay">
         <div class="overlay-verse">既见君子，云胡不喜</div>
@@ -517,8 +513,7 @@
 
     <section class="page photo-page" data-page="4">
       <picture>
-        <source media="(max-width: 768px)" srcset="photo-5-mobile.jpg">
-        <img src="photo-5.jpg" alt="婚纱照 5" decoding="async">
+        <img data-desktop="photo-5.jpg" data-mobile="photo-5-mobile.jpg" alt="婚纱照 5" decoding="async">
       </picture>
       <div class="photo-overlay">
         <div class="overlay-verse">愿有岁月可回首，且以深情共白头</div>
@@ -558,6 +553,25 @@
 
   <script>
     (function() {
+      // ========================================================
+      //  〇、按屏幕只选一张图，避免手机端同时下载桌面图 + 手机图
+      // ========================================================
+      const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
+      function getFinalSrc(img) {
+        const desktop = img.getAttribute('data-desktop');
+        const mobile = img.getAttribute('data-mobile');
+        if (isMobile && mobile) return mobile;
+        return desktop || mobile || '';
+      }
+
+      document.querySelectorAll('.page img[data-desktop]').forEach(img => {
+        const finalSrc = getFinalSrc(img);
+        if (finalSrc) {
+          img.src = finalSrc;
+        }
+      });
+
       // ========================================================
       //  一、整页滑动控制
       // ========================================================
@@ -655,7 +669,7 @@
       pageEls.forEach((p, i) => p.classList.toggle('active', i === 0));
 
       // ========================================================
-      //  二、预加载所有媒体，显示进度（音频优化版）
+      //  二、预加载所有媒体，显示进度（只预加载最终选中的图片）
       // ========================================================
       const bgMusic = document.getElementById('bgMusic');
       const musicToggle = document.getElementById('musicToggle');
@@ -667,8 +681,9 @@
       let musicPlaying = false;
 
       const imageSrcs = [];
-      document.querySelectorAll('.page img').forEach(img => {
-        if (img.src) imageSrcs.push(img.src);
+      document.querySelectorAll('.page img[data-desktop]').forEach(img => {
+        const finalSrc = img.getAttribute('src');
+        if (finalSrc) imageSrcs.push(finalSrc);
       });
 
       const musicSrc = bgMusic.getAttribute('src');
@@ -719,7 +734,6 @@
             img.onerror = fail;
             img.src = item.src;
           } else {
-            // 音频：用 loadeddata 代替 canplaythrough，快很多
             const audio = new Audio();
             audio.preload = 'auto';
             audio.addEventListener('loadeddata', done, { once: true });
@@ -727,7 +741,6 @@
             audio.src = item.src;
             audio.load();
 
-            // 兜底：3 秒还没 loadeddata 也算完成，避免进度条卡死
             setTimeout(() => {
               if (!settled) done();
             }, 3000);
