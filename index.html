@@ -453,10 +453,10 @@
 
   <div id="pages">
 
+    <!-- 封面：统一使用 photo-1.jpg -->
     <section class="page cover-page" data-page="0">
       <picture>
-        <img data-desktop="photo-1.jpg" data-mobile="photo-1-mobile.jpg" alt="婚纱照封面"
-             fetchpriority="high" decoding="async">
+        <img data-src="photo-1.jpg" alt="婚纱照封面" fetchpriority="high" decoding="async">
       </picture>
 
       <div class="cover-mask"></div>
@@ -484,42 +484,47 @@
       </div>
     </section>
 
+    <!-- 照片页 2：统一 photo-2.jpg -->
     <section class="page photo-page" data-page="1">
       <picture>
-        <img data-desktop="photo-2.jpg" data-mobile="photo-2-mobile.jpg" alt="婚纱照 2" decoding="async">
+        <img data-src="photo-2.jpg" alt="婚纱照 2" decoding="async">
       </picture>
       <div class="photo-overlay">
         <div class="overlay-verse">朝暮与年岁并往，与你行至天光</div>
       </div>
     </section>
 
+    <!-- 照片页 3：统一 photo-3.jpg -->
     <section class="page photo-page" data-page="2">
       <picture>
-        <img data-desktop="photo-3.jpg" data-mobile="photo-3-mobile.jpg" alt="婚纱照 3" decoding="async">
+        <img data-src="photo-3.jpg" alt="婚纱照 3" decoding="async">
       </picture>
       <div class="photo-overlay">
         <div class="overlay-verse">山水一程，三生有幸</div>
       </div>
     </section>
 
+    <!-- 照片页 4：统一 photo-4.jpg -->
     <section class="page photo-page" data-page="3">
       <picture>
-        <img data-desktop="photo-4.jpg" data-mobile="photo-4-mobile.jpg" alt="婚纱照 4" decoding="async">
+        <img data-src="photo-4.jpg" alt="婚纱照 4" decoding="async">
       </picture>
       <div class="photo-overlay">
         <div class="overlay-verse">既见君子，云胡不喜</div>
       </div>
     </section>
 
+    <!-- 照片页 5：统一 photo-5.jpg -->
     <section class="page photo-page" data-page="4">
       <picture>
-        <img data-desktop="photo-5.jpg" data-mobile="photo-5-mobile.jpg" alt="婚纱照 5" decoding="async">
+        <img data-src="photo-5.jpg" alt="婚纱照 5" decoding="async">
       </picture>
       <div class="photo-overlay">
         <div class="overlay-verse">愿有岁月可回首，且以深情共白头</div>
       </div>
     </section>
 
+    <!-- 请柬页 -->
     <section class="page invite-page" data-page="5">
       <canvas id="canvas"></canvas>
       <div class="invite-content">
@@ -554,22 +559,12 @@
   <script>
     (function() {
       // ========================================================
-      //  〇、按屏幕只选一张图，避免手机端同时下载桌面图 + 手机图
+      //  〇、仅移动端：直接使用 photo-N.jpg 图片
       // ========================================================
-      const isMobile = window.matchMedia('(max-width: 768px)').matches;
-
-      function getFinalSrc(img) {
-        const desktop = img.getAttribute('data-desktop');
-        const mobile = img.getAttribute('data-mobile');
-        if (isMobile && mobile) return mobile;
-        return desktop || mobile || '';
-      }
-
-      document.querySelectorAll('.page img[data-desktop]').forEach(img => {
-        const finalSrc = getFinalSrc(img);
-        if (finalSrc) {
-          img.src = finalSrc;
-        }
+      // 统一从 data-src 读取图片地址，然后设置 src
+      document.querySelectorAll('.page img[data-src]').forEach(img => {
+        const src = img.getAttribute('data-src');
+        if (src) img.src = src;
       });
 
       // ========================================================
@@ -669,7 +664,7 @@
       pageEls.forEach((p, i) => p.classList.toggle('active', i === 0));
 
       // ========================================================
-      //  二、预加载所有媒体，显示进度（只预加载最终选中的图片）
+      //  二、预加载所有媒体，显示进度（只预加载 photo-N.jpg）
       // ========================================================
       const bgMusic = document.getElementById('bgMusic');
       const musicToggle = document.getElementById('musicToggle');
@@ -680,10 +675,11 @@
 
       let musicPlaying = false;
 
+      // 收集所有最终图片地址
       const imageSrcs = [];
-      document.querySelectorAll('.page img[data-desktop]').forEach(img => {
-        const finalSrc = img.getAttribute('src');
-        if (finalSrc) imageSrcs.push(finalSrc);
+      document.querySelectorAll('.page img[data-src]').forEach(img => {
+        const src = img.getAttribute('src');
+        if (src) imageSrcs.push(src);
       });
 
       const musicSrc = bgMusic.getAttribute('src');
