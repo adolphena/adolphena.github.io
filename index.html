@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Welcome</title>
+  <title>季晨阳 & 许慧敏 · 婚礼邀请</title>
   <style>
     * {
       margin: 0;
@@ -15,7 +15,8 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #ffffff;
+      /* 粉色渐变背景：中心更透亮，边缘更粉嫩 */
+      background: radial-gradient(circle at 50% 45%, #fff8fb 0%, #ffe4ee 55%, #ffd0e0 100%);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
       cursor: default;
     }
@@ -48,36 +49,65 @@
       box-sizing: border-box;
     }
 
+    /* 主标题：深玫红，有分量 */
     .title {
       font-size: clamp(2rem, 10vw, 6rem);
       font-weight: 600;
       letter-spacing: -0.02em;
-      color: #1d1d1f;
+      color: #9e2f58;
       line-height: 1.2;
       text-align: center;
       white-space: nowrap;
       display: inline-block;
       padding: 0 0.1em;
       transition: font-size 0.1s ease;
+      text-shadow: 0 2px 16px rgba(255, 200, 220, 0.8);
     }
 
-    .subtitle {
+    /* 婚礼小标签 */
+    .wedding-tag {
+      font-size: 0.95rem;
+      font-weight: 500;
+      letter-spacing: 0.35em;
+      color: #b86a88;
+      margin-top: 0.9em;
+      text-transform: uppercase;
+      text-shadow: 0 1px 8px rgba(255, 220, 235, 0.9);
+    }
+
+    /* 人名：比副标题更突出 */
+    .names {
       font-size: 1.8rem;
-      font-weight: 400;
-      color: #1d1d1f;
-      letter-spacing: 0.08em;
+      font-weight: 500;
+      color: #7a3a52;
+      letter-spacing: 0.12em;
       margin-top: 1.2em;
       white-space: nowrap;
       text-align: center;
       line-height: 1.4;
       transition: font-size 0.1s ease;
+      text-shadow: 0 1px 8px rgba(255, 220, 235, 0.9);
+    }
+
+    /* 时间地点：更小更淡，形成层级 */
+    .subtitle {
+      font-size: 1.25rem;
+      font-weight: 400;
+      color: #8b5f70;
+      letter-spacing: 0.06em;
+      margin-top: 0.7em;
+      white-space: nowrap;
+      text-align: center;
+      line-height: 1.5;
+      transition: font-size 0.1s ease;
+      text-shadow: 0 1px 6px rgba(255, 225, 238, 0.9);
     }
 
     /* ---------- 地图链接按钮组 ---------- */
     .map-links {
       display: flex;
-      gap: 12px;
-      margin-top: 2em;
+      gap: 14px;
+      margin-top: 2.2em;
       flex-wrap: wrap;
       justify-content: center;
     }
@@ -87,50 +117,68 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 10px 22px;
+      padding: 11px 24px;
       border-radius: 999px;
-      background: rgba(255, 100, 150, 0.10);
-      border: 1px solid rgba(255, 100, 150, 0.35);
-      color: #d6336c;
+      /* 按钮更实，对比度更高 */
+      background: rgba(255, 248, 252, 0.96);
+      border: 1px solid rgba(180, 80, 130, 0.45);
+      /* 文字更深，保证可读性 */
+      color: #8a2450;
       font-size: 1rem;
-      letter-spacing: 0.05em;
+      font-weight: 500;
+      letter-spacing: 0.06em;
       text-decoration: none;
       transition: all 0.25s ease;
       white-space: nowrap;
       user-select: none;
+      box-shadow: 0 2px 10px rgba(200, 120, 150, 0.15);
     }
 
     .map-link:hover {
-      background: rgba(255, 100, 150, 0.20);
-      border-color: rgba(255, 100, 150, 0.55);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 14px rgba(255, 100, 150, 0.25);
+      background: #fff0f6;
+      border-color: rgba(160, 60, 110, 0.75);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(210, 110, 155, 0.28);
     }
 
     .map-link:active {
       transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(210, 110, 155, 0.2);
     }
 
     .map-link svg {
       flex-shrink: 0;
-      opacity: 0.85;
+      opacity: 0.9;
     }
 
     @media (max-width: 600px) {
       body {
         cursor: auto;
       }
-      .subtitle {
-        font-size: 1.3rem;
+      .wedding-tag {
+        font-size: 0.8rem;
+        letter-spacing: 0.3em;
+      }
+      .names {
+        font-size: 1.35rem;
         margin-top: 1em;
       }
+      .subtitle {
+        font-size: 1rem;
+        margin-top: 0.6em;
+        white-space: normal; /* 窄屏允许换行，防止溢出 */
+        max-width: 90vw;
+      }
       .map-links {
-        margin-top: 1.5em;
+        margin-top: 1.8em;
         gap: 10px;
       }
       .map-link {
-        padding: 9px 18px;
+        padding: 10px 18px;
         font-size: 0.9rem;
+      }
+      .title {
+        text-shadow: 0 1px 10px rgba(255, 210, 225, 0.9);
       }
     }
   </style>
@@ -140,9 +188,10 @@
   <canvas id="canvas"></canvas>
   <div class="title-wrapper">
     <div class="title" id="titleText">别来无恙啊</div>
-    <div class="subtitle">季晨阳 &amp; 许慧敏</div>
-    <div class="subtitle">2026.11.14 午宴</div>
-    <div class="subtitle">富东大酒店(园区店)</div>
+    <div class="wedding-tag">Wedding Invitation</div>
+    <div class="names">季晨阳 ♡ 许慧敏</div>
+    <div class="subtitle">2026.11.14（周六）午宴</div>
+    <div class="subtitle">富东大酒店（园区店）</div>
 
     <div class="map-links">
       <a class="map-link" href="https://surl.amap.com/88qmZiK1o5t8"
@@ -151,7 +200,7 @@
           <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0
                    9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/>
         </svg>
-        高德地图
+        高德导航
       </a>
 
       <a class="map-link" href="https://j.map.baidu.com/a6/2cFM"
@@ -160,7 +209,7 @@
           <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0
                    9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/>
         </svg>
-        百度地图
+        百度导航
       </a>
     </div>
   </div>
@@ -224,7 +273,7 @@
             baseVx: 0,
             baseVy: 0,
             size: Math.random() * 6 + 4,
-            alpha: Math.random() * 0.3 + 0.1,
+            alpha: Math.random() * 0.3 + 0.12,
             rotation: Math.random() * Math.PI * 2
           });
           const p = particles[particles.length - 1];
@@ -313,21 +362,24 @@
           if (p.y > canvas.height + 20) p.y = -20;
 
           let color;
+          // 粒子颜色：柔和的粉 / 珊瑚粉，更明亮
           if (hasMouse) {
             const dx = mouse.x - p.x;
             const dy = mouse.y - p.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
             if (dist < 180) {
               const t = 1 - dist / 180;
-              const r = Math.round(29 + (255 - 29) * t);
-              const g = Math.round(29 + (100 - 29) * t);
-              const b = Math.round(31 + (150 - 31) * t);
-              color = `rgba(${r}, ${g}, ${b}, ${p.alpha + t * 0.5})`;
+              // 从暖粉 #d46a92 渐变到亮珊瑚粉 #ff8fb0
+              const r = Math.round(212 + (255 - 212) * t);
+              const g = Math.round(106 + (143 - 106) * t);
+              const b = Math.round(146 + (176 - 146) * t);
+              color = `rgba(${r}, ${g}, ${b}, ${p.alpha + t * 0.35})`;
             } else {
-              color = `rgba(29, 29, 31, ${p.alpha})`;
+              color = `rgba(224, 130, 170, ${p.alpha * 0.95})`;
             }
           } else {
-            color = `rgba(29, 29, 31, ${p.alpha})`;
+            // 无交互时也是柔粉，不显脏
+            color = `rgba(230, 140, 175, ${p.alpha * 0.9})`;
           }
 
           drawHeart(ctx, p.x, p.y, p.size, p.rotation, color);
@@ -343,7 +395,8 @@
               ctx.moveTo(mouse.x, mouse.y);
               ctx.lineTo(p.x, p.y);
               const t = 1 - dist / 140;
-              ctx.strokeStyle = `rgba(255, 100, 150, ${t * 0.15})`;
+              // 连接线浅粉
+              ctx.strokeStyle = `rgba(235, 130, 175, ${t * 0.28})`;
               ctx.lineWidth = 0.6;
               ctx.stroke();
             }
