@@ -30,7 +30,6 @@
       z-index: 1;
     }
 
-    /* 用 flex 让文字绝对居中 */
     .title-wrapper {
       position: fixed;
       top: 0;
@@ -42,10 +41,10 @@
       align-items: center;
       justify-content: center;
       z-index: 2;
-      pointer-events: none;        /* 保留：不挡住爱心粒子交互 */
+      pointer-events: none;
       user-select: none;
       white-space: nowrap;
-      padding: 5vh 4vw;            /* 新增：防止内容贴边/溢出 */
+      padding: 5vh 4vw;
       box-sizing: border-box;
     }
 
@@ -74,13 +73,20 @@
       transition: font-size 0.1s ease;
     }
 
-    /* ---------- 地图链接按钮 ---------- */
+    /* ---------- 地图链接按钮组 ---------- */
+    .map-links {
+      display: flex;
+      gap: 12px;
+      margin-top: 2em;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
     .map-link {
-      pointer-events: auto;        /* 关键：让链接可点击 */
+      pointer-events: auto;
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      margin-top: 2em;
       padding: 10px 22px;
       border-radius: 999px;
       background: rgba(255, 100, 150, 0.10);
@@ -110,7 +116,6 @@
       opacity: 0.85;
     }
 
-    /* 移动端微调 */
     @media (max-width: 600px) {
       body {
         cursor: auto;
@@ -119,8 +124,11 @@
         font-size: 1.3rem;
         margin-top: 1em;
       }
-      .map-link {
+      .map-links {
         margin-top: 1.5em;
+        gap: 10px;
+      }
+      .map-link {
         padding: 9px 18px;
         font-size: 0.9rem;
       }
@@ -132,18 +140,29 @@
   <canvas id="canvas"></canvas>
   <div class="title-wrapper">
     <div class="title" id="titleText">别来无恙啊</div>
-    <div class="subtitle">JCY &amp; XHM</div>
+    <div class="subtitle">季晨阳 &amp; 许慧敏</div>
     <div class="subtitle">2026.11.14</div>
     <div class="subtitle">富东大酒店(园区店)</div>
 
-    <a class="map-link" href="https://j.map.baidu.com/cc/C6q"
-       target="_blank" rel="noopener">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0
-                 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/>
-      </svg>
-      在地图中查看位置
-    </a>
+    <div class="map-links">
+      <a class="map-link" href="https://surl.amap.com/88qmZiK1o5t8"
+         target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0
+                   9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/>
+        </svg>
+        高德地图
+      </a>
+
+      <a class="map-link" href="https://j.map.baidu.com/a6/2cFM"
+         target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0
+                   9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/>
+        </svg>
+        百度地图
+      </a>
+    </div>
   </div>
 
   <script>
@@ -164,7 +183,6 @@
         adjustTitleFontSize();
       }
 
-      // 自适应字号
       function adjustTitleFontSize() {
         if (!titleEl) return;
 
@@ -192,7 +210,6 @@
         titleEl.style.lineHeight = '1.2';
       }
 
-      // 初始化粒子
       function initParticles() {
         particles = [];
         const count = Math.floor((canvas.width * canvas.height) / 3500);
@@ -216,7 +233,6 @@
         }
       }
 
-      // 鼠标事件
       window.addEventListener('mousemove', (e) => {
         mouse.x = e.clientX;
         mouse.y = e.clientY;
@@ -229,7 +245,6 @@
         mouse.y = -9999;
       });
 
-      // 触摸支持
       window.addEventListener('touchmove', (e) => {
         if (e.touches.length > 0) {
           const touch = e.touches[0];
@@ -245,7 +260,6 @@
         mouse.y = -9999;
       });
 
-      // 绘制爱心
       function drawHeart(ctx, x, y, size, rotation, color) {
         ctx.save();
         ctx.translate(x, y);
@@ -266,7 +280,6 @@
         ctx.restore();
       }
 
-      // 动画循环
       function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -320,7 +333,6 @@
           drawHeart(ctx, p.x, p.y, p.size, p.rotation, color);
         });
 
-        // 鼠标与附近粒子的连线
         if (hasMouse) {
           particles.forEach(p => {
             const dx = mouse.x - p.x;
@@ -341,7 +353,6 @@
         requestAnimationFrame(animate);
       }
 
-      // 初始化
       window.addEventListener('resize', () => {
         resize();
       });
@@ -363,7 +374,6 @@
 
       init();
 
-      // 旋转屏幕后兜底检测
       let lastWidth = window.innerWidth;
       setInterval(() => {
         if (window.innerWidth !== lastWidth) {
